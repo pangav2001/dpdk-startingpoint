@@ -20,7 +20,7 @@ WERROR_FLAGS += -Wundef -Wwrite-strings
 
 DPDK_LIBS := $(shell pkg-config --libs --static libdpdk)
 
-LDFLAGS = $(DPDK_LIBS) -lrt -lpthread -lm -ldl -lconfig -lnuma -lgcov
+LDFLAGS = $(DPDK_LIBS) -lrt -lpthread -lm -ldl -lconfig -lnuma -lgcov -lubpf
 
 $(info $(SRCDIR))
 $(info $(OBJS_C))

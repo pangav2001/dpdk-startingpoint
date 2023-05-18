@@ -10,9 +10,22 @@
 #include <config.h>
 #include <base.h>
 
+void convertMacAddress(const char* readableMac, unsigned char* hSource) {
+    char hex[3] = {0};
+    int i;
+
+    for (i = 0; i < 6; ++i) {
+        hex[0] = readableMac[i * 3];
+        hex[1] = readableMac[i * 3 + 1];
+        hSource[i] = (unsigned char)strtol(hex, NULL, 16);
+    }
+}
+
 struct rte_mempool *pktmbuf_pool;
 
-void dpdk_init(int *argc, char ***argv)
+bool t = true;
+
+void dpdk_init(int *argc, char ***argv, struct rte_hash_names_params *params_names, struct rte_lpm **lpm)
 {
 	int ret, nb_ports, i;
 	uint8_t port_id = 0;
@@ -43,7 +56,8 @@ void dpdk_init(int *argc, char ***argv)
       .mq_mode = RTE_ETH_MQ_TX_NONE,
     },
   };
-
+  	
+	
 	ret = rte_eal_init(*argc, *argv);
 	if (ret < 0)
 		rte_exit(EXIT_FAILURE, "Invalid EAL arguments\n");
@@ -115,6 +129,45 @@ void dpdk_init(int *argc, char ***argv)
 		       (link.link_duplex == RTE_ETH_LINK_FULL_DUPLEX) ?
 			       ("full-duplex") :
 			       ("half-duplex\n"));
+	for (int i = 0; i < NUM_OF_HASH_TABLES; i++)
+	{
+		*(params_names->hash_tables[i]) = rte_hash_create(&(params_names->params[i]));
+		if ((*params_names->hash_tables[i])) {
+			printf("Ela mou!\n");
+		}
+		else {
+			printf("Error is %s\n", rte_strerror(rte_errno));
+		}
+	}
+	struct rte_lpm_config lpm_config;
+	lpm_config.max_rules = 1024;
+	lpm_config.number_tbl8s = 256;
+	lpm_config.flags = 0;
+	char name[] = "lpm_table";
+	*lpm = rte_lpm_create(name, rte_socket_id(), &lpm_config);
+	if (*lpm == NULL) {
+		printf("Cannot create LPM table\n");
+	}
+	else {
+		printf("Successfully created LPM table!\n");
+	}
+	// *forbidden_src_ips = rte_hash_create(ipv6_hash_table_params);
+	// if (*forbidden_src_ips) {
+	// 		printf("Ela mou!\n");
+	// }
+	// else {
+	// 	printf("Error is %s\n", rte_strerror(rte_errno));
+	// }
+	const char* readableMac = "de:ad:be:ef:7b:15"; // Replace with your MAC address
+    unsigned char hSource[6];
+
+    convertMacAddress(readableMac, hSource);
+
+    // printf("ethhdr->h_source: %02x:%02x:%02x:%02x:%02x:%02x\n",
+    //        hSource[0], hSource[1], hSource[2], hSource[3], hSource[4], hSource[5]);
+	// int added;
+	// added = rte_hash_add_key_data(*(params_names->hash_tables[2]), hSource, (void *) &t);
+	// printf("Added is: %d\n", added);
 }
 
 void dpdk_terminate(void)
@@ -126,7 +179,7 @@ void dpdk_terminate(void)
 	rte_eth_dev_close(portid);
 }
 
-void dpdk_poll(void)
+void dpdk_poll(ubpf_jit_fn fn)
 {
 	int ret = 0;
 	struct rte_mbuf *rx_pkts[BATCH_SIZE];
@@ -135,9 +188,20 @@ void dpdk_poll(void)
 	if (!ret)
 		return;
 
-  printf("I received packet\n");
+  printf("I received %d packet(s) on port %d of length %d.\n", ret, rx_pkts[0]->port, rx_pkts[0]->pkt_len);
+	void *data = rte_pktmbuf_mtod(rx_pkts[0], void *);
+	// uint32_t tmp;
+	// void *data = rte_pktmbuf_read(rx_pkts[0], src_reg + imm32, sizeof(tmp), &tmp);
+// Execute the eBPF program
+	uint64_t ubpf_ret;
+	
+	// int rv = ubpf_exec(vm, data, RTE_MBUF_DEFAULT_BUF_SIZE, &ubpf_ret);
+	// int rv = ubpf_exec(vm, (uint32_t*) rx_pkts[0]->buf_addr, rx_pkts[0]->pkt_len, &ubpf_ret);
+	// int rv = ubpf_exec(vm, data, rx_pkts[0]->pkt_len, &ubpf_ret);
+	ubpf_ret = fn(data, rx_pkts[0]->pkt_len);
 
   /* FIXME: Start your logic from here */
+  printf("eBPF return status: %lu\n", ubpf_ret);
 }
 
 void dpdk_out(struct rte_mbuf *pkt)
