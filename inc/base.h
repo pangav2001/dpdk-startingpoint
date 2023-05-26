@@ -33,3 +33,6 @@ void dpdk_poll(ubpf_jit_fn fn);
 void dpdk_out(struct rte_mbuf *pkt);
 
 RTE_DECLARE_PER_LCORE(int, queue_id);
+
+/* net */
+void eth_in(struct rte_mbuf *pkt_buf, ubpf_jit_fn fn);

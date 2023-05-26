@@ -16,7 +16,7 @@ WERROR_FLAGS += -Wcast-align -Wnested-externs -Wcast-qual
 WERROR_FLAGS += -Wformat-nonliteral -Wformat-security
 WERROR_FLAGS += -Wundef -Wwrite-strings
 
-#CFLAGS += $(WERROR_FLAGS) -mavx2
+CFLAGS += $(WERROR_FLAGS) -mavx2
 
 DPDK_LIBS := $(shell pkg-config --libs --static libdpdk)
 
