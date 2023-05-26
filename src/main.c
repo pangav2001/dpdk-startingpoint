@@ -16,9 +16,8 @@
     _a > _b ? _a : _b;       \
 })
 
-struct rte_lpm *ipv4_rules_trie, *ipv6_rules_trie;
-
-struct rte_lpm **lpms[] = {&ipv4_rules_trie, &ipv6_rules_trie};
+struct rte_lpm *ipv4_rules_trie;
+struct rte_lpm6 *ipv6_rules_trie;
 
 static int read_binary_file(const char *filename, uint8_t **buf, size_t *len) {
     int fd = open(filename, O_RDONLY);
@@ -96,19 +95,19 @@ struct ipv6_lpm_key {
 };
 static void* bpf_map_lookup_elem(void **map_name, void *key)
 {
-	struct rte_lpm *map = (struct rte_lpm*) *map_name;
-	if (map) {
+	if ((struct rte_lpm*) *map_name == ipv4_rules_trie
+		|| (struct rte_lpm6*) *map_name == ipv6_rules_trie) {
 		int lookup;
 		void *looked_up;
-		if (map == ipv4_rules_trie)
+		if ((struct rte_lpm*) *map_name == ipv4_rules_trie)
 		{
 			struct ipv4_lpm_key *lpm_key = (struct ipv4_lpm_key*) key; 
-			lookup = rte_lpm_lookup(map, rte_be_to_cpu_32(lpm_key->data), &looked_up);
+			lookup = rte_lpm_lookup(*map_name, rte_be_to_cpu_32(lpm_key->data), &looked_up);
 		}
-		else if (map == ipv6_rules_trie)
+		else if ((struct rte_lpm6*) *map_name == ipv6_rules_trie)
 		{
 			struct ipv6_lpm_key *lpm_key = (struct ipv6_lpm_key*) key; 
-			lookup = rte_lpm_lookup(map, lpm_key->data->s6_addr, &looked_up);
+			lookup = rte_lpm6_lookup(*map_name, lpm_key->data->s6_addr, &looked_up);
 		}
 		if (lookup >= 0)
 			return looked_up;
@@ -118,10 +117,8 @@ static void* bpf_map_lookup_elem(void **map_name, void *key)
 
 static void register_lpm_tries(void **tables[])
 {
-	for (int i = 0; i < NUM_OF_LPM_TRIES; i++)
-	{
-		*(tables[i]) = *(lpms[i]);
-	}
+	*(tables[0]) = ipv4_rules_trie;
+	*(tables[1]) = ipv6_rules_trie;
 }
 
 static int thread_main(void *arg)
@@ -176,9 +173,9 @@ int main(int argc, char **argv)
 	int count, lcore_id, ret = 0;
 
 	printf("Hello world\n");
-	dpdk_init(&argc, &argv, lpms);
+	dpdk_init(&argc, &argv, &ipv4_rules_trie, &ipv6_rules_trie);
 	struct in_addr buf;
-	char addr[INET_ADDRSTRLEN] = "10.1.0.1";
+	char addr[INET_ADDRSTRLEN] = "10.1.0.2";
 	inet_pton(AF_INET, addr, &buf);
 	uint32_t ip = ntohl(buf.s_addr);
 	printf("IP is %u\n", ip);

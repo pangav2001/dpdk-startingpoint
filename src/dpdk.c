@@ -14,7 +14,7 @@ struct rte_mempool *pktmbuf_pool;
 
 bool t = true;
 
-void dpdk_init(int *argc, char ***argv, struct rte_lpm **lpms[])
+void dpdk_init(int *argc, char ***argv, struct rte_lpm **lpm4, struct rte_lpm6 **lpm6)
 {
 	int ret, nb_ports, i;
 	uint8_t port_id = 0;
@@ -118,21 +118,29 @@ void dpdk_init(int *argc, char ***argv, struct rte_lpm **lpms[])
 		       (link.link_duplex == RTE_ETH_LINK_FULL_DUPLEX) ?
 			       ("full-duplex") :
 			       ("half-duplex\n"));
-	for (int i = 0; i < NUM_OF_LPM_TRIES; i++)
-	{
-		struct rte_lpm_config lpm_config;
-		lpm_config.max_rules = 1024;
-		lpm_config.number_tbl8s = 256;
-		lpm_config.flags = 0;
-		char name[20];
-		sprintf(name,"lpm_table%d", i);
-		*(lpms[i]) = rte_lpm_create(name, rte_socket_id(), &lpm_config);
-		if (*(lpms[i]) == NULL) {
-			printf("Cannot create LPM table\n");
-		}
-		else {
-			printf("Successfully created LPM table!\n");
-		}
+	struct rte_lpm_config lpm_config;
+	lpm_config.max_rules = 1024;
+	lpm_config.number_tbl8s = 256;
+	lpm_config.flags = 0;
+	char name4[] = "lpm4_trie";
+	*lpm4 = rte_lpm_create(name4, rte_socket_id(), &lpm_config);
+	if (*lpm4 == NULL) {
+		printf("Cannot create LPM4 table\n");
+	}
+	else {
+		printf("Successfully created LPM4 table!\n");
+	}
+	struct rte_lpm6_config lpm6_config;
+	lpm6_config.max_rules = 1024;
+	lpm6_config.number_tbl8s = 256;
+	lpm6_config.flags = 0;
+	char name6[] = "lpm6_trie";
+	*lpm6 = rte_lpm6_create(name6, rte_socket_id(), &lpm6_config);
+	if (*lpm6 == NULL) {
+		printf("Cannot create LPM6 table\n");
+	}
+	else {
+		printf("Successfully created LPM6 table!\n");
 	}
 }
 
