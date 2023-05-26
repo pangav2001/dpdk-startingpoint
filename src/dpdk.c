@@ -10,22 +10,11 @@
 #include <config.h>
 #include <base.h>
 
-void convertMacAddress(const char* readableMac, unsigned char* hSource) {
-    char hex[3] = {0};
-    int i;
-
-    for (i = 0; i < 6; ++i) {
-        hex[0] = readableMac[i * 3];
-        hex[1] = readableMac[i * 3 + 1];
-        hSource[i] = (unsigned char)strtol(hex, NULL, 16);
-    }
-}
-
 struct rte_mempool *pktmbuf_pool;
 
 bool t = true;
 
-void dpdk_init(int *argc, char ***argv, struct rte_hash_names_params *params_names, struct rte_lpm **lpm)
+void dpdk_init(int *argc, char ***argv, struct rte_lpm **lpms[])
 {
 	int ret, nb_ports, i;
 	uint8_t port_id = 0;
@@ -129,27 +118,21 @@ void dpdk_init(int *argc, char ***argv, struct rte_hash_names_params *params_nam
 		       (link.link_duplex == RTE_ETH_LINK_FULL_DUPLEX) ?
 			       ("full-duplex") :
 			       ("half-duplex\n"));
-	for (int i = 0; i < NUM_OF_HASH_TABLES; i++)
+	for (int i = 0; i < NUM_OF_LPM_TRIES; i++)
 	{
-		*(params_names->hash_tables[i]) = rte_hash_create(&(params_names->params[i]));
-		if ((*params_names->hash_tables[i])) {
-			printf("Ela mou!\n");
+		struct rte_lpm_config lpm_config;
+		lpm_config.max_rules = 1024;
+		lpm_config.number_tbl8s = 256;
+		lpm_config.flags = 0;
+		char name[20];
+		sprintf(name,"lpm_table%d", i);
+		*(lpms[i]) = rte_lpm_create(name, rte_socket_id(), &lpm_config);
+		if (*(lpms[i]) == NULL) {
+			printf("Cannot create LPM table\n");
 		}
 		else {
-			printf("Error is %s\n", rte_strerror(rte_errno));
+			printf("Successfully created LPM table!\n");
 		}
-	}
-	struct rte_lpm_config lpm_config;
-	lpm_config.max_rules = 1024;
-	lpm_config.number_tbl8s = 256;
-	lpm_config.flags = 0;
-	char name[] = "lpm_table";
-	*lpm = rte_lpm_create(name, rte_socket_id(), &lpm_config);
-	if (*lpm == NULL) {
-		printf("Cannot create LPM table\n");
-	}
-	else {
-		printf("Successfully created LPM table!\n");
 	}
 }
 

@@ -17,7 +17,8 @@
 #include <rte_lpm.h>
 #include "/home/kali/Desktop/git/github/others/ubpf/vm/inc/ubpf.h"
 
-#define NUM_OF_HASH_TABLES 4
+#define NUM_OF_HASH_TABLES 0
+#define NUM_OF_LPM_TRIES 2
 struct rte_hash_names_params
 {
     struct rte_hash_parameters params[NUM_OF_HASH_TABLES];
@@ -26,7 +27,7 @@ struct rte_hash_names_params
 
 
 /* DPDK functionality */
-void dpdk_init(int *argc, char ***argv, struct rte_hash_names_params *params_names, struct rte_lpm **lpm);
+void dpdk_init(int *argc, char ***argv, struct rte_lpm **lpms[]);
 void dpdk_terminate(void);
 // void dpdk_poll(struct ubpf_vm *vm);
 void dpdk_poll(ubpf_jit_fn fn);
