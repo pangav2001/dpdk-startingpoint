@@ -175,7 +175,7 @@ int main(int argc, char **argv)
 	printf("Hello world\n");
 	dpdk_init(&argc, &argv, &ipv4_rules_trie, &ipv6_rules_trie);
 	struct in_addr buf;
-	char addr[INET_ADDRSTRLEN] = "10.1.0.2";
+	char addr[INET_ADDRSTRLEN] = "10.0.42.1";
 	inet_pton(AF_INET, addr, &buf);
 	uint32_t ip = ntohl(buf.s_addr);
 	printf("IP is %u\n", ip);

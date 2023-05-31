@@ -79,8 +79,8 @@ void eth_in(struct rte_mbuf *pkt_buf, ubpf_jit_fn fn)
 	if (hdr->ether_type == rte_cpu_to_be_16(RTE_ETHER_TYPE_ARP)) {
 		arp_in(pkt_buf);
 	} else {
-		printf("Unknown ether type: %" PRIu16 ". Calling uBPF function!\n",
-			   rte_be_to_cpu_16(hdr->ether_type));
+		// printf("Unknown ether type: %" PRIu16 ". Calling uBPF function!\n",
+		// 	   rte_be_to_cpu_16(hdr->ether_type));
 	    ubpf_ret = fn((void *)rte_pktmbuf_mtod(pkt_buf, void *), pkt_buf->pkt_len);
         printf("uBPF return status: %lu\n", ubpf_ret);
 		rte_pktmbuf_free(pkt_buf);
