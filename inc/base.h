@@ -16,7 +16,7 @@
 #include <rte_hash_crc.h>
 #include <rte_lpm.h>
 #include <rte_lpm6.h>
-#include "/home/kali/Desktop/git/github/others/ubpf/vm/inc/ubpf.h"
+#include "/home/pgavriil/git/ubpf/vm/inc/ubpf.h"
 
 #define NUM_OF_HASH_TABLES 0
 #define NUM_OF_LPM_TRIES 2

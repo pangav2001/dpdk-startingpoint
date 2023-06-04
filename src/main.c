@@ -8,7 +8,7 @@
 #include <rte_malloc.h>
 
 #define BUFFER_SIZE 1024
-#define FILE_PATH "/home/kali/Desktop/git/github/others/ubpf/eBPF/standard_acl.o"
+#define FILE_PATH "/home/pgavriil/git/ubpf/eBPF/standard_acl.o"
 #define max(a,b)             \
 ({                           \
     __typeof__ (a) _a = (a); \
@@ -175,26 +175,14 @@ int main(int argc, char **argv)
 	printf("Hello world\n");
 	dpdk_init(&argc, &argv, &ipv4_rules_trie, &ipv6_rules_trie);
 	struct in_addr buf;
-	char addr[INET_ADDRSTRLEN] = "10.0.42.1";
+	char addr[INET_ADDRSTRLEN] = "10.1.0.1";
 	inet_pton(AF_INET, addr, &buf);
 	uint32_t ip = ntohl(buf.s_addr);
 	printf("IP is %u\n", ip);
-	// ip = ntohl(inet_addr("10.1.1.0"));
-	// printf("IP is %u\n", ip);
 	uint32_t next_hop = 1;
 	ret = rte_lpm_add(ipv4_rules_trie, ip, 32, next_hop);
 	if (ret < 0)
 		printf("Failed to add rule to ipv4_rules_trie table\n");
-	else{
-		printf("Added entry to ipv4_rules_trie table!\n");
-		ip = ntohl(inet_addr("10.1.1.1")); // 10.1.1.1
-		ret = rte_lpm_lookup(ipv4_rules_trie, ip, &next_hop);
-		if (ret < 0){
-			printf("Failed to perform lookup\n");
-			printf("Returned value was %d\n", ret);
-		}
-		printf("Lookup result: %d\n", next_hop);
-	}
 	/* set signal handler for proper exiting */
 	force_quit = false;
 	signal(SIGINT, signal_handler);
