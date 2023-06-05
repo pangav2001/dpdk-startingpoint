@@ -8,6 +8,7 @@ make dpdk
 To build the project:
 ```
 export PKG_CONFIG_PATH=<the path of the pkgconfig directory inside dpdk>
+In my case, export PKG_CONFIG_PATH=/home/pgavriil/git/dpdk-startingpoint/external/dpdk/install-dir/lib/x86_64-linux-gnu/pkgconfig
 make build
 ```
 
