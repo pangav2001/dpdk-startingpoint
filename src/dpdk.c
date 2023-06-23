@@ -119,7 +119,7 @@ void dpdk_init(int *argc, char ***argv, struct rte_lpm **lpm4, struct rte_lpm6 *
 			       ("full-duplex") :
 			       ("half-duplex\n"));
 	struct rte_lpm_config lpm_config;
-	lpm_config.max_rules = 1024;
+	lpm_config.max_rules = 10001;
 	lpm_config.number_tbl8s = 256;
 	lpm_config.flags = 0;
 	char name4[] = "lpm4_trie";
@@ -131,7 +131,7 @@ void dpdk_init(int *argc, char ***argv, struct rte_lpm **lpm4, struct rte_lpm6 *
 		printf("Successfully created LPM4 table!\n");
 	}
 	struct rte_lpm6_config lpm6_config;
-	lpm6_config.max_rules = 1024;
+	lpm6_config.max_rules = 10001;
 	lpm6_config.number_tbl8s = 256;
 	lpm6_config.flags = 0;
 	char name6[] = "lpm6_trie";
@@ -153,7 +153,8 @@ void dpdk_terminate(void)
 	rte_eth_dev_close(portid);
 }
 
-void dpdk_poll(ubpf_jit_fn fn)
+// void dpdk_poll(ubpf_jit_fn	fn)
+void dpdk_poll(struct ubpf_vm *vm)
 {
 	int ret = 0;
 	struct rte_mbuf *rx_pkts[BATCH_SIZE];
@@ -162,7 +163,11 @@ void dpdk_poll(ubpf_jit_fn fn)
 	if (!ret)
 		return;
 	for (int i=0;i<ret;i++)
-    	eth_in(rx_pkts[i], fn);
+    	// eth_in(rx_pkts[i], fn);
+    	eth_in(rx_pkts[i], vm);
+	// rte_pktmbuf_free_bulk(rx_pkts, ret);
+	// for (int i=0;i<ret;i++)
+	// 	rte_pktmbuf_free(rx_pkts[i]);
 //   	printf("I received %d packet(s) on port %d of length %d.\n", ret, rx_pkts[0]->port, rx_pkts[0]->pkt_len);
 // 	void *data = rte_pktmbuf_mtod(rx_pkts[0], void *);
 // 	// Execute the eBPF program
